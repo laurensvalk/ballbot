@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# ev3dev symbolic links
+ev3devices/
+
 # C extensions
 *.so
 
