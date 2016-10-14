@@ -261,7 +261,7 @@ while True:
         leftSpeedReference    = 0
         
         # Turning the robot on the ball, with no nett balance change
-        turnRate = 5
+        turnRate = 0
 
         ###############################################################
         ##  Reading the Gyro.
