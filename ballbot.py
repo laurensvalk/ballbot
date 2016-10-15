@@ -397,7 +397,7 @@ while True:
         SetDuty(motorDutyCyclePitch2, motorDutyCyclePitch-turnRate)
         SetDuty(motorDutyCycleRolll1, motorDutyCycleRolll+turnRate)
         SetDuty(motorDutyCycleRolll2, motorDutyCycleRolll-turnRate)
-
+        print(forwardSpeedReference,leftSpeedReference,turnRate)
         ###############################################################
         ##  Update angle estimate and Gyro Offset Estimate
         ###############################################################
