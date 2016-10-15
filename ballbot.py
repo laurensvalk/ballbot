@@ -113,9 +113,9 @@ class GamePadThread(threading.Thread):
             for event in gamepad.read_loop():  # this loops infinitely
                 if event.type == 3:  # A stick is moved
                     if event.code == 5:  # Y axis on right stick
-                        forwardSpeedReference = scale(event.value, (0, 255), (-30, 30))
+                        forwardSpeedReference = scale(event.value, (0, 255), (-30, 30))*0
                     if event.code == 2:  # X axis on right stick
-                        leftSpeedReference = scale(event.value, (0, 255), (-30, 30))
+                        leftSpeedReference = scale(event.value, (0, 255), (-30, 30))*0
                         # print rightSpeedControl
                     if event.code == 0:  # X axis on right stick
                         turnRate = scale(event.value, (0, 255), (-10, 10))
@@ -397,7 +397,7 @@ while True:
         SetDuty(motorDutyCyclePitch2, motorDutyCyclePitch-turnRate)
         SetDuty(motorDutyCycleRolll1, motorDutyCycleRolll+turnRate)
         SetDuty(motorDutyCycleRolll2, motorDutyCycleRolll-turnRate)
-        print(forwardSpeedReference,leftSpeedReference,turnRate)
+
         ###############################################################
         ##  Update angle estimate and Gyro Offset Estimate
         ###############################################################
