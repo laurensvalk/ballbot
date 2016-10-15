@@ -49,7 +49,7 @@ with open('ev3devices/in3/mode', 'w') as f:
     f.write('GYRO-RATE')
 
 # Set Remote control mode
-with open('ev3devices/in3/mode', 'w') as f:
+with open('ev3devices/in4/mode', 'w') as f:
     f.write('IR-REMOTE')
 
 # Touch sensor macros
