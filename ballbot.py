@@ -268,6 +268,20 @@ while True:
         # Turning the robot on the ball, with no nett balance change
         turnRate = 0
 
+        irSensorBtn = FastRead(irSensor)
+        if irSensorBtn == 1: #red up
+            turnRate = 5
+        elif irSensorBtn == 3: #blue up
+            turnRate = -5
+        elif irSensorBtn == 2: #red down
+            leftSpeedReference = 8
+        elif irSensorBtn == 4: #blue down
+            leftSpeedReference = -8
+        elif irSensorBtn == 5: #red&blue up
+            forwardSpeedReference = 8
+        elif irSensorBtn == 8:  # red&blue up
+            forwardSpeedReference = -8
+
         ###############################################################
         ##  Reading the Gyro.
         ###############################################################
@@ -275,16 +289,6 @@ while True:
         gyroRateRawRolll = FastRead(gyroRolllRaw)
         gyroRatePitch = (gyroRateRawPitch - gyroOffsetPitch)*radiansPerSecondPerRawGyroUnit
         gyroRateRolll = (gyroRateRawRolll - gyroOffsetRolll)*radiansPerSecondPerRawGyroUnit
-
-        ###############################################################
-        ##  Reading the Ir Sensor.
-        ###############################################################
-        irSensorBtn = FastRead(irSensor)
-        if irSensorBtn == 1:
-            turnRate = 5
-        elif irSensorBtn == 3:
-            turnRate = -5
-
 
         ###############################################################
         ##  Reading the Motor Position
