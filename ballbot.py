@@ -33,7 +33,8 @@ def FastWrite(outfile,value):
 # Open sensor files for (fast) reading
 touchSensorValueRaw = open("ev3devices/in1/value0", "rb")
 gyroPitchRaw  = open("ev3devices/in2/value0", "rb")
-gyroRolllRaw  = open("ev3devices/in3/value0", "rb")    
+gyroRolllRaw  = open("ev3devices/in3/value0", "rb")
+irSensor  = open("ev3devices/in4/value0", "rb")
 
 # Initial state of the touch sensor
 touchSensorPressed = FastRead(touchSensorValueRaw)
@@ -46,6 +47,10 @@ with open('ev3devices/in2/mode', 'w') as f:
     f.write('GYRO-RATE')   
 with open('ev3devices/in3/mode', 'w') as f:
     f.write('GYRO-RATE')
+
+# Set Remote control mode
+with open('ev3devices/in3/mode', 'w') as f:
+    f.write('IR-REMOTE')
 
 # Touch sensor macros
 def WaitForTouchPress():
@@ -270,6 +275,16 @@ while True:
         gyroRateRawRolll = FastRead(gyroRolllRaw)
         gyroRatePitch = (gyroRateRawPitch - gyroOffsetPitch)*radiansPerSecondPerRawGyroUnit
         gyroRateRolll = (gyroRateRawRolll - gyroOffsetRolll)*radiansPerSecondPerRawGyroUnit
+
+        ###############################################################
+        ##  Reading the Ir Sensor.
+        ###############################################################
+        irSensorBtn = FastRead(irSensor)
+        if irSensorBtn == 1:
+            turnRate = 5
+        elif irSensorBtn == 3:
+            turnRate = -5
+
 
         ###############################################################
         ##  Reading the Motor Position
