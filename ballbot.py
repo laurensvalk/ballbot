@@ -82,7 +82,14 @@ with open('ev3devices/in4/mode', 'w') as f:
 def WaitForTouchPress():
     touchSensorPressed = FastRead(touchSensorValueRaw)  
     while not touchSensorPressed: 
-        touchSensorPressed = FastRead(touchSensorValueRaw) 
+
+        #Why not play some music while we wait?
+        irSensorBtn = FastRead(irSensor)
+        if irSensorBtn == 1:  # red up
+            run_script('starwars.sh')
+            # TODO: make a larger sound board.... :)
+
+        touchSensorPressed = FastRead(touchSensorValueRaw)
         time.sleep(0.1)
 
 def WaitForTouchRelease():
@@ -292,14 +299,6 @@ while True:
         loopCount = loopCount + 1
         tLoopStart = time.time()
 
-        ###############################################################
-        ##  User input sound
-        ###############################################################
-
-        irSensorBtn = FastRead(irSensorCh3)
-        if irSensorBtn == 1:  # red up
-            run_script('starwars.sh')
-        #TODO: make a larger sound board.... :)
 
         ###############################################################
         ##  User input driving
