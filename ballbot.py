@@ -5,6 +5,7 @@ import time
 import math
 from collections import deque
 import os
+from subprocess import Popen, call
 
 ########################################################################
 ##
@@ -23,6 +24,24 @@ def FastWrite(outfile,value):
     outfile.truncate(0)
     outfile.write(str(int(value)))
     outfile.flush()    
+    
+    
+# Beeping. Taken from the ev3dev.org source code    
+def beep(args=''):
+        """
+        Call beep command with the provided arguments (if any).
+        See `beep man page`_ and google 'linux beep music' for inspiration.
+        .. _`beep man page`: http://manpages.debian.org/cgi-bin/man.cgi?query=beep
+        """
+        with open(os.devnull, 'w') as n:
+            return Popen('/usr/bin/beep %s' % args, stdout=n, shell=True)
+    
+def run_script(name,wait=False):
+        with open(os.devnull, 'w') as n:
+            p = Popen("./"+name, stdout=n, shell=True)
+            if wait:
+                return p.wait()
+
 
 ########################################################################
 ##
@@ -30,11 +49,17 @@ def FastWrite(outfile,value):
 ##
 ########################################################################
 
+#Play some music while we boot 
+#run_script('starwars.sh')
+
+# Make shortcuts to motor and sensor files
+run_script('makelinks.sh',wait=True)
+
 # Open sensor files for (fast) reading
 touchSensorValueRaw = open("ev3devices/in1/value0", "rb")
 gyroPitchRaw  = open("ev3devices/in2/value0", "rb")
 gyroRolllRaw  = open("ev3devices/in3/value0", "rb")
-irSensor  = open("ev3devices/in4/value0", "rb")
+irSensor  = open("ev3devices/in4/value1", "rb")
 
 # Initial state of the touch sensor
 touchSensorPressed = FastRead(touchSensorValueRaw)
@@ -71,8 +96,10 @@ def WaitForTouchRelease():
 ##
 ########################################################################
 
-#Roll  1 A, normal dir
-#Pitch 1 B, normal dir
+# The EV3 screen points forward (anterior)
+
+#Roll  1 A, normal dir  (
+#Pitch 1 B, normal dir  (
 #Roll  2 C, reversed
 #Pitch 2 D, reversed
 
@@ -191,6 +218,7 @@ while True:
     gyroRatePitch                   = 0 # The angular rate of the robot (how fast it is falling forward or backward), measured in radians per second.
     gyroEstimatedAnglePitch         = 0 # The gyro doesn't measure the angle of the robot, but we can estimate this angle by keeping track of the gyroRate value in time
     gyroOffsetPitch                 = 0 # Over time, the gyro rate value can drift. This causes the sensor to think it is moving even when it is perfectly still. We keep track of this offset.
+    pitchAngleReference = 0
 
     # The same variables, but now for the roll direction
     motorAngleRawRolll              = 0 # The angle of "the motor", measured in raw units (degrees for the EV3). We will take the average of both motor positions as "the motor" angle, wich is essentially how far the middle of the robot has traveled.
@@ -207,6 +235,10 @@ while True:
     gyroEstimatedAngleRolll         = 0 # The gyro doesn't measure the angle of the robot, but we can estimate this angle by keeping track of the gyroRate value in time
     gyroOffsetRolll                 = 0 # Over time, the gyro rate value can drift. This causes the sensor to think it is moving even when it is perfectly still. We keep track of this offset.
 
+
+    forwardSpeedReference = 0
+    leftSpeedReference = 0
+    
     # Counter of the main balancing loop
     loopCount = 0      
     
@@ -223,6 +255,7 @@ while True:
           
     print("-----------------------------------")      
     print("Calibrating...")
+    beep('-r 2')    
 
     #As you hold the robot still, determine the average sensor value of 100 samples
     gyroRateCalibrateCount = 100
@@ -236,6 +269,7 @@ while True:
     # Print the result   
     print("GyroOffsetPitch: ",gyroOffsetPitch)   
     print("GyroOffsetRolll: ",gyroOffsetRolll) 
+    beep('-r 1')
     time.sleep(0.1)
 
 
@@ -261,27 +295,117 @@ while True:
         ##  User input
         ###############################################################        
         
-        # Driving forward and sideways
-        forwardSpeedReference = 0
-        leftSpeedReference    = 0
+        #useOldCode = 1
         
-        # Turning the robot on the ball, with no nett balance change
-        turnRate = 0
+        speedIncrement = speedDriveMax * loopTimeSec/timeToMaxSpeed
+        useCodeVersion = 0
+        if useCodeVersion == 0:
+            
+            # Driving forward and sideways
+            forwardSpeedReference = 0
+            leftSpeedReference    = 0
+            
+            # Turning the robot on the ball, with no nett balance change
+            turnRate = 0
 
-        irSensorBtn = FastRead(irSensor)
-        if irSensorBtn == 1: #red up
-            turnRate = 5
-        elif irSensorBtn == 3: #blue up
-            turnRate = -5
-        elif irSensorBtn == 2: #red down
-            leftSpeedReference = 8
-        elif irSensorBtn == 4: #blue down
-            leftSpeedReference = -8
-        elif irSensorBtn == 5: #red&blue up
-            forwardSpeedReference = 8
-        elif irSensorBtn == 8:  # red&blue up
-            forwardSpeedReference = -8
+            irSensorBtn = FastRead(irSensor)
+            if irSensorBtn == 1: #red up
+                turnRate = speedTurn
+            elif irSensorBtn == 2: #red down
+                turnRate = -speedTurn
+            elif irSensorBtn == 3: #blue up
+                forwardSpeedReference = speedDriveMax
+            elif irSensorBtn == 4: #blue down
+                forwardSpeedReference = -speedDriveMax
+            elif irSensorBtn == 5: #red&blue up
+                leftSpeedReference = speedDriveMax
+            elif irSensorBtn == 8:  # red&blue up
+                leftSpeedReference = -speedDriveMax
+                
+        elif useCodeVersion == 1:
+            irSensorBtn = FastRead(irSensor)
+            
+            
+            if irSensorBtn == 1: #red up
+                #turnRate = speedTurn 
+                forwardEndSpeedReference = speedDriveMax
+                leftEndSpeedReference = speedDriveMax
+            elif irSensorBtn == 2: #red down
+                #turnRate = -speedTurn
+                leftEndSpeedReference = speedDriveMax
+                forwardEndSpeedReference = -speedDriveMax
+            elif irSensorBtn == 3: #blue up
+                forwardEndSpeedReference = speedDriveMax
+                leftEndSpeedReference = -speedDriveMax
+            elif irSensorBtn == 4: #blue down
+                forwardEndSpeedReference = -speedDriveMax
+                leftEndSpeedReference = -speedDriveMax
+            elif irSensorBtn == 5: #red&blue up
+                forwardEndSpeedReference = speedDriveMax
+                leftEndSpeedReference    = 0            
+            elif irSensorBtn == 8:  # red&blue down
+                forwardEndSpeedReference = -speedDriveMax
+                leftEndSpeedReference    = 0            
+            elif irSensorBtn == 6:  # red up & blue down
+                turnRate = -speedTurn
+            elif irSensorBtn == 7:  # red down & blue up
+                turnRate = speedTurn
+            elif irSensorBtn == 10:  # red up & down
+                leftEndSpeedReference = speedDriveMax
+                forwardEndSpeedReference = 0
+            elif irSensorBtn == 11:  # blue up & down
+                leftEndSpeedReference = -speedDriveMax
+                forwardEndSpeedReference = 0
+            else: #No buttons are pressed
+                # Set speed/turn rates to zero
+                turnRate = 0
+                leftEndSpeedReference    = 0            
+                forwardEndSpeedReference = 0
 
+		#Round down the forwardSpeedRefernce to 0 if it's close
+                if -speedIncrement <= forwardSpeedReference <= speedIncrement:
+                    forwardSpeedReference = 0                    
+                if -speedIncrement <= leftSpeedReference <= speedIncrement:
+                    leftSpeedReference = 0                    
+                
+            # After the reference is set	
+            if(forwardEndSpeedReference > forwardSpeedReference):
+                forwardSpeedReference += speedIncrement
+            elif(forwardEndSpeedReference < forwardSpeedReference):
+                forwardSpeedReference -= speedIncrement
+
+            # After the reference is set	
+            if(leftEndSpeedReference > leftSpeedReference):
+                leftSpeedReference += speedIncrement
+            elif(leftEndSpeedReference < leftSpeedReference):
+                leftSpeedReference -= speedIncrement
+                
+        elif useCodeVersion == 2:
+            
+            # Driving forward and sideways
+            forwardSpeedReference = 0
+            leftSpeedReference    = 0
+            pitchAngleReference   = 0
+            
+            # Turning the robot on the ball, with no nett balance change
+            turnRate = 0
+
+            irSensorBtn = FastRead(irSensor)
+            if irSensorBtn == 1: #red up
+                turnRate = speedTurn
+            elif irSensorBtn == 2: #red down
+                turnRate = -speedTurn
+            elif irSensorBtn == 3: #blue up
+                forwardSpeedReference = speedDriveMax
+                pitchAngleReference = refAngleDrive
+            elif irSensorBtn == 4: #blue down
+                forwardSpeedReference = -speedDriveMax
+            elif irSensorBtn == 5: #red&blue up
+                leftSpeedReference = speedDriveMax
+            elif irSensorBtn == 8:  # red&blue up
+                leftSpeedReference = -speedDriveMax
+
+            #print(forwardSpeedReference, leftSpeedReference)
         ###############################################################
         ##  Reading the Gyro.
         ###############################################################
