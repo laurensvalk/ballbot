@@ -25,12 +25,6 @@ def FastWrite(outfile,value):
     outfile.write(str(int(value)))
     outfile.flush()    
     
-def runCmd(cmd, wait=False):
-    with open(os.devnull, 'w') as n:
-        p = Popen(cmd, stdout=n, shell=True)
-        if wait:
-            p.wait()
-        return p
 
 # Beeping. Taken from the ev3dev.org source code    
 def beep(args=''):
@@ -39,17 +33,16 @@ def beep(args=''):
         See `beep man page`_ and google 'linux beep music' for inspiration.
         .. _`beep man page`: http://manpages.debian.org/cgi-bin/man.cgi?query=beep
         """
-        runCmd(['/usr/bin/beep', args])
+        with open(os.devnull, 'w') as n:
+            return Popen('/usr/bin/beep %s' % args, stdout=n, shell=True)
+
+def run_script(name,wait=False):
+        with open(os.devnull, 'w') as n:
+            p = Popen("./"+name, stdout=n, shell=True)
+            if wait:
+                return p.wait()
 
 soundProcess = ""
-def playSound(soundFile):
-    global soundProcess
-    if soundProcess:
-        if soundProcess.poll() == 0:
-            #The previous sound has ended. Play a new one.
-            soundProcess = runCmd(['aplay',soundFile])
-    else:
-        soundProcess = runCmd(['aplay', soundFile])
 
 ########################################################################
 ##
@@ -61,7 +54,7 @@ def playSound(soundFile):
 #run_script('starwars.sh')
 
 # Make shortcuts to motor and sensor files
-runCmd(['./makelinks.sh'],wait=True)
+run_script('makelinks.sh',wait=True)
 
 # Open sensor files for (fast) reading
 touchSensorValueRaw = open("ev3devices/in1/value0", "rb")
@@ -86,6 +79,14 @@ with open('ev3devices/in3/mode', 'w') as f:
 with open('ev3devices/in4/mode', 'w') as f:
     f.write('IR-REMOTE')
 
+def playSound(soundFile):
+    global soundProcess
+    if soundProcess:
+        if soundProcess.poll() == 0:
+            #The previous sound has ended. Play a new one.
+            soundProcess = Popen(['aplay',soundFile])
+    else:
+        soundProcess = Popen(['aplay', soundFile])
 
 
 # Touch sensor macros
