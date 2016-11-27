@@ -61,7 +61,7 @@ def playSound(soundFile):
 #run_script('starwars.sh')
 
 # Make shortcuts to motor and sensor files
-run_script('makelinks.sh',wait=True)
+runCmd(['./makelinks.sh'],wait=True)
 
 # Open sensor files for (fast) reading
 touchSensorValueRaw = open("ev3devices/in1/value0", "rb")
