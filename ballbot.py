@@ -59,7 +59,8 @@ run_script('makelinks.sh',wait=True)
 touchSensorValueRaw = open("ev3devices/in1/value0", "rb")
 gyroPitchRaw  = open("ev3devices/in2/value0", "rb")
 gyroRolllRaw  = open("ev3devices/in3/value0", "rb")
-irSensor  = open("ev3devices/in4/value1", "rb")
+irSensor  = open("ev3devices/in4/value1", "rb") #Reads IR commands on channel 2
+irSensorCh3 = open("ev3devices/in4/value2", "rb") #Reads IR commands on channel 3
 
 # Initial state of the touch sensor
 touchSensorPressed = FastRead(touchSensorValueRaw)
@@ -290,13 +291,19 @@ while True:
         ###############################################################
         loopCount = loopCount + 1
         tLoopStart = time.time()
-        
+
         ###############################################################
-        ##  User input
-        ###############################################################        
-        
-        #useOldCode = 1
-        
+        ##  User input sound
+        ###############################################################
+
+        irSensorBtn = FastRead(irSensorCh3)
+        if irSensorBtn == 1:  # red up
+            run_script('starwars.sh')
+        #TODO: make a larger sound board.... :)
+
+        ###############################################################
+        ##  User input driving
+        ###############################################################
 
         if remoteControlRegime == 0:
             # This is a tested version where the head turns stable, but driving is rather slow and wobbly.
