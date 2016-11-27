@@ -95,7 +95,7 @@ def WaitForTouchPress():
     while not touchSensorPressed:
 
         #Why not play some music while we wait?
-        irSensorBtn = FastRead(irSensor)
+        irSensorBtn = FastRead(irSensorCh3)
         if irSensorBtn == 1:  # red up
             playSound("theme.au")
         elif irSensorBtn == 2:
@@ -313,7 +313,7 @@ while True:
         tLoopStart = time.time()
 
         # Why not play some music while we run?
-        irSensorBtn = FastRead(irSensor)
+        irSensorBtn = FastRead(irSensorCh3)
         if irSensorBtn == 1:  # red up
             playSound("theme.au")
         elif irSensorBtn == 2:
