@@ -42,6 +42,7 @@ def run_script(name,wait=False):
             if wait:
                 return p.wait()
 
+soundProcess = ""
 
 ########################################################################
 ##
@@ -78,6 +79,16 @@ with open('ev3devices/in3/mode', 'w') as f:
 with open('ev3devices/in4/mode', 'w') as f:
     f.write('IR-REMOTE')
 
+def playSound(soundFile):
+    global soundProcess
+    if soundProcess:
+        if soundProcess.poll() == 0:
+            #The previous sound has ended. Play a new one.
+            soundProcess = Popen(['aplay',soundFile])
+    else:
+        soundProcess = Popen(['aplay', soundFile])
+
+
 # Touch sensor macros
 def WaitForTouchPress():
     touchSensorPressed = FastRead(touchSensorValueRaw)  
@@ -86,8 +97,8 @@ def WaitForTouchPress():
         #Why not play some music while we wait?
         irSensorBtn = FastRead(irSensor)
         if irSensorBtn == 1:  # red up
-            run_script('starwars.sh')
-            # TODO: make a larger sound board.... :)
+            playSound("theme.au")
+        # A larger sound board coming soon.... :)
 
         touchSensorPressed = FastRead(touchSensorValueRaw)
         time.sleep(0.1)
