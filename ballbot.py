@@ -92,7 +92,7 @@ def playSound(soundFile):
 # Touch sensor macros
 def WaitForTouchPress():
     touchSensorPressed = FastRead(touchSensorValueRaw)  
-    while not touchSensorPressed: 
+    while not touchSensorPressed:
 
         #Why not play some music while we wait?
         irSensorBtn = FastRead(irSensor)
@@ -312,7 +312,13 @@ while True:
         loopCount = loopCount + 1
         tLoopStart = time.time()
 
-
+        # Why not play some music while we run?
+        irSensorBtn = FastRead(irSensor)
+        if irSensorBtn == 1:  # red up
+            playSound("theme.au")
+        elif irSensorBtn == 2:
+            playSound("frustrated.wav")
+            # A larger sound board coming soon.... :)
         ###############################################################
         ##  User input driving
         ###############################################################
