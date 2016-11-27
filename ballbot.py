@@ -25,7 +25,13 @@ def FastWrite(outfile,value):
     outfile.write(str(int(value)))
     outfile.flush()    
     
-    
+def runCmd(cmd, wait=False):
+    with open(os.devnull, 'w') as n:
+        p = Popen(cmd, stdout=n, shell=True)
+        if wait:
+            p.wait()
+        return p
+
 # Beeping. Taken from the ev3dev.org source code    
 def beep(args=''):
         """
@@ -33,16 +39,17 @@ def beep(args=''):
         See `beep man page`_ and google 'linux beep music' for inspiration.
         .. _`beep man page`: http://manpages.debian.org/cgi-bin/man.cgi?query=beep
         """
-        with open(os.devnull, 'w') as n:
-            return Popen('/usr/bin/beep %s' % args, stdout=n, shell=True)
-    
-def run_script(name,wait=False):
-        with open(os.devnull, 'w') as n:
-            p = Popen("./"+name, stdout=n, shell=True)
-            if wait:
-                return p.wait()
+        runCmd(['/usr/bin/beep', args])
 
 soundProcess = ""
+def playSound(soundFile):
+    global soundProcess
+    if soundProcess:
+        if soundProcess.poll() == 0:
+            #The previous sound has ended. Play a new one.
+            soundProcess = runCmd(['aplay',soundFile])
+    else:
+        soundProcess = runCmd(['aplay', soundFile])
 
 ########################################################################
 ##
@@ -79,14 +86,6 @@ with open('ev3devices/in3/mode', 'w') as f:
 with open('ev3devices/in4/mode', 'w') as f:
     f.write('IR-REMOTE')
 
-def playSound(soundFile):
-    global soundProcess
-    if soundProcess:
-        if soundProcess.poll() == 0:
-            #The previous sound has ended. Play a new one.
-            soundProcess = Popen(['aplay',soundFile])
-    else:
-        soundProcess = Popen(['aplay', soundFile])
 
 
 # Touch sensor macros
@@ -98,6 +97,8 @@ def WaitForTouchPress():
         irSensorBtn = FastRead(irSensor)
         if irSensorBtn == 1:  # red up
             playSound("theme.au")
+        elif irSensorBtn == 2:
+            playSound("frustrated.wav")
         # A larger sound board coming soon.... :)
 
         touchSensorPressed = FastRead(touchSensorValueRaw)
