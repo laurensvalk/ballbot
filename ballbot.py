@@ -5,7 +5,7 @@ import time
 import math
 from collections import deque
 import os
-from subprocess import Popen, call
+from subprocess import Popen
 
 ########################################################################
 ##
@@ -297,15 +297,13 @@ while True:
         
         #useOldCode = 1
         
-        speedIncrement = speedDriveMax * loopTimeSec/timeToMaxSpeed
-        useCodeVersion = 0
-        if useCodeVersion == 0:
-            
-            # Driving forward and sideways
+
+        if remoteControlRegime == 0:
+            # This is a tested version where the head turns stable, but driving is rather slow and wobbly.
+
+            # Driving forward and sideways. Resetting references in case nu button is pressed.
             forwardSpeedReference = 0
             leftSpeedReference    = 0
-            
-            # Turning the robot on the ball, with no nett balance change
             turnRate = 0
 
             irSensorBtn = FastRead(irSensor)
@@ -322,16 +320,16 @@ while True:
             elif irSensorBtn == 8:  # red&blue up
                 leftSpeedReference = -speedDriveMax
                 
-        elif useCodeVersion == 1:
+        elif remoteControlRegime == 1:
+            # Experimental driving regime where we incrementally increase drive speed to reduce shaking.
+
+            speedIncrement = speedDriveMax * loopTimeSec / timeToMaxSpeed
+
             irSensorBtn = FastRead(irSensor)
-            
-            
             if irSensorBtn == 1: #red up
-                #turnRate = speedTurn 
                 forwardEndSpeedReference = speedDriveMax
                 leftEndSpeedReference = speedDriveMax
             elif irSensorBtn == 2: #red down
-                #turnRate = -speedTurn
                 leftEndSpeedReference = speedDriveMax
                 forwardEndSpeedReference = -speedDriveMax
             elif irSensorBtn == 3: #blue up
@@ -362,48 +360,44 @@ while True:
                 leftEndSpeedReference    = 0            
                 forwardEndSpeedReference = 0
 
-		#Round down the forwardSpeedRefernce to 0 if it's close
+                #Round down the forwardSpeedRefernce to 0 if it's close
                 if -speedIncrement <= forwardSpeedReference <= speedIncrement:
                     forwardSpeedReference = 0                    
                 if -speedIncrement <= leftSpeedReference <= speedIncrement:
                     leftSpeedReference = 0                    
                 
-            # After the reference is set	
+            # After the reference is set move the actual target toward it
             if(forwardEndSpeedReference > forwardSpeedReference):
                 forwardSpeedReference += speedIncrement
             elif(forwardEndSpeedReference < forwardSpeedReference):
                 forwardSpeedReference -= speedIncrement
 
-            # After the reference is set	
+            # After the reference is set move the actual target toward it
             if(leftEndSpeedReference > leftSpeedReference):
                 leftSpeedReference += speedIncrement
             elif(leftEndSpeedReference < leftSpeedReference):
                 leftSpeedReference -= speedIncrement
                 
-        elif useCodeVersion == 2:
-            
-            # Driving forward and sideways
+        elif remoteControlRegime == 2:
+            # This regime controls the angle of the head, in addition to the speed reference.
+
+            # Reset values in case no button will be pressed.
             forwardSpeedReference = 0
             leftSpeedReference    = 0
-            pitchAngleReference   = 0
-            
-            # Turning the robot on the ball, with no nett balance change
             turnRate = 0
+            pitchAngleReference   = 0
 
             irSensorBtn = FastRead(irSensor)
-            if irSensorBtn == 1: #red up
+            if irSensorBtn == 1: #red up, turn head
                 turnRate = speedTurn
-            elif irSensorBtn == 2: #red down
+            elif irSensorBtn == 2: #red down, turn head
                 turnRate = -speedTurn
-            elif irSensorBtn == 3: #blue up
+            elif irSensorBtn == 3: #blue up, drive fwd
                 forwardSpeedReference = speedDriveMax
                 pitchAngleReference = refAngleDrive
-            elif irSensorBtn == 4: #blue down
+            elif irSensorBtn == 4: #blue down, drive back
                 forwardSpeedReference = -speedDriveMax
-            elif irSensorBtn == 5: #red&blue up
-                leftSpeedReference = speedDriveMax
-            elif irSensorBtn == 8:  # red&blue up
-                leftSpeedReference = -speedDriveMax
+                pitchAngleReference = -refAngleDrive
 
             #print(forwardSpeedReference, leftSpeedReference)
         ###############################################################

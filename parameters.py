@@ -5,7 +5,7 @@ gainMotorAngularSpeed          = 9*0.95
 gainMotorAngleErrorAccumulated = 0.6
 
 #driving params
-useCodeVersion                 = 0
+remoteControlRegime            = 0
 speedDriveMax                  = 11
 speedTurn                      = 5
 timeToMaxSpeed                 = 1
