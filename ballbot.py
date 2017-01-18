@@ -142,11 +142,22 @@ motorDutyCycleRolll2 = open("ev3devices/outC/duty_cycle_sp", "w")
 motorDutyCyclePitch2 = open("ev3devices/outD/duty_cycle_sp", "w")
 
 # Function to set the duty cycle of the motors
-def SetDuty(motorDutyFileHandle, duty):
+def SetDuty(motorDutyFileHandle, duty, voltage):
+    # Add offset
+    
+    duty = duty*nominalVoltage/voltage    
+    
+    dutyInt = int(round(duty))
+    
+    if(dutyInt > 0):
+        dutyInt += dutyOffset
+    elif(dutyInt < 0):
+        dutyInt -= dutyOffset
+
     # Clamp the value between -100 and 100
-    duty = min(max(duty,-100),100)
+    dutyInt = min(max(duty,-100),100)
     # Apply the signal to the motor
-    FastWrite(motorDutyFileHandle, duty)
+    FastWrite(motorDutyFileHandle, dutyInt)
         
 # Set motors in run-direct mode
 with open('ev3devices/outA/command', 'w') as f:  
@@ -271,8 +282,8 @@ while True:
           
      
     with open('/sys/class/power_supply/legoev3-battery/voltage_now','r') as f:
-        voltage = f.read()
-        print("Voltage: " + str(int(voltage)*0.000001))
+        voltage = float(f.read())
+        print("Voltage: " + str(voltage*0.000001))
           
     print("-----------------------------------")      
     print("Calibrating...")
@@ -352,17 +363,17 @@ while True:
 
             irSensorBtn = FastRead(irSensor)
             if irSensorBtn == 1: #red up
-                forwardEndSpeedReference = speedDriveMax
-                leftEndSpeedReference = speedDriveMax
+                forwardEndSpeedReference = speedDriveMax*0.7
+                leftEndSpeedReference = speedDriveMax*0.7
             elif irSensorBtn == 2: #red down
-                leftEndSpeedReference = speedDriveMax
-                forwardEndSpeedReference = -speedDriveMax
+                leftEndSpeedReference = speedDriveMax*0.7
+                forwardEndSpeedReference = -speedDriveMax*0.7
             elif irSensorBtn == 3: #blue up
-                forwardEndSpeedReference = speedDriveMax
-                leftEndSpeedReference = -speedDriveMax
+                forwardEndSpeedReference = speedDriveMax*0.7
+                leftEndSpeedReference = -speedDriveMax*0.7
             elif irSensorBtn == 4: #blue down
-                forwardEndSpeedReference = -speedDriveMax
-                leftEndSpeedReference = -speedDriveMax
+                forwardEndSpeedReference = -speedDriveMax*0.7
+                leftEndSpeedReference = -speedDriveMax*0.7
             elif irSensorBtn == 5: #red&blue up
                 forwardEndSpeedReference = speedDriveMax
                 leftEndSpeedReference    = 0            
@@ -484,10 +495,10 @@ while True:
         ##  Apply the signal to the motors, and add turning
         ###############################################################
 
-        SetDuty(motorDutyCyclePitch1, motorDutyCyclePitch+turnRate)
-        SetDuty(motorDutyCyclePitch2, motorDutyCyclePitch-turnRate)
-        SetDuty(motorDutyCycleRolll1, motorDutyCycleRolll+turnRate)
-        SetDuty(motorDutyCycleRolll2, motorDutyCycleRolll-turnRate)
+        SetDuty(motorDutyCyclePitch1, motorDutyCyclePitch+turnRate, voltage)
+        SetDuty(motorDutyCyclePitch2, motorDutyCyclePitch-turnRate, voltage)
+        SetDuty(motorDutyCycleRolll1, motorDutyCycleRolll+turnRate, voltage)
+        SetDuty(motorDutyCycleRolll2, motorDutyCycleRolll-turnRate, voltage)
 
         ###############################################################
         ##  Update angle estimate and Gyro Offset Estimate
@@ -528,10 +539,10 @@ while True:
     tProgramEnd = time.time()    
         
     # Turn off the motors    
-    SetDuty(motorDutyCyclePitch1, 0)
-    SetDuty(motorDutyCyclePitch2, 0)
-    SetDuty(motorDutyCycleRolll1, 0)
-    SetDuty(motorDutyCycleRolll2, 0)
+    SetDuty(motorDutyCyclePitch1, 0, voltage)
+    SetDuty(motorDutyCyclePitch2, 0, voltage)
+    SetDuty(motorDutyCycleRolll1, 0, voltage)
+    SetDuty(motorDutyCycleRolll2, 0, voltage)
 
     # Calculate loop time
     tLoop = (tProgramEnd - tProgramStart)/loopCount
